@@ -1,24 +1,40 @@
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import { toast } from "sonner";
 import ErrorMessage from "../components/ErrorMessage";
+import type { RegisterData } from "../types";
+import api from "../config/axios";
 
 export default function Register() {
 
-  const initialValues = {
-    name: "",
-    email: "",
-    handle: "",
-    password: "",
-    password_confirmation: ""
-  }
+	const initialValues =  {
+		name: "",
+		email: "",
+		handle: "",
+		password: "",
+		password_confirmation: ""
+	}
 
-	const { register, watch, handleSubmit, formState: { errors } } = useForm({ defaultValues: initialValues });
+	const { register, getValues, handleSubmit, formState: { errors }, reset } = useForm<RegisterData>({ defaultValues: initialValues });
+
+	const handleRegister = async (dataForm: RegisterData) => {
+		try {
+			const { data } = await api.post(`/auth/register`, dataForm);
+			toast.success(data.message);
+			reset();
+		} catch (error) {
+			if (axios.isAxiosError(error) && error.response) {
+				toast.error(error.response.data.message || "Error al crear la cuenta");
+			}
+		}
+	}
 
 	return (
 		<>
 			<h1 className="text-4xl text-white font-bold">Crear Cuenta</h1>
 			<form
-				onSubmit={handleSubmit((data) => console.log(data))}
+				onSubmit={handleSubmit(handleRegister)}
 				className="bg-white px-5 py-20 rounded-lg space-y-10 mt-10"
 			>
 				<div className="grid grid-cols-1 space-y-3">
@@ -32,20 +48,21 @@ export default function Register() {
 						className="bg-slate-100 border-none p-3 rounded-lg placeholder-slate-400"
 						{...register("name", { required: "El nombre es requerido" })}
 					/>
-          {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
+          			{errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
 				</div>
 				<div className="grid grid-cols-1 space-y-3">
 					<label htmlFor="email" className="text-2xl text-slate-500">
-						E-mail
+						Correo Electrónico
 					</label>
 					<input
 						id="email"
 						type="email"
-						placeholder="Email de Registro"
+						placeholder="Correo Electrónico"
 						className="bg-slate-100 border-none p-3 rounded-lg placeholder-slate-400"
-						{ ...register("email", { required: "El email es requerido" }) }
+						{ ...register("email", { required: "El correo es requerido", 
+							pattern: { value: /^\S+@\S+$/i, message: "Email inválido" } }) }
 					/>
-          {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
+          			{errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
 				</div>
 				<div className="grid grid-cols-1 space-y-3">
 					<label htmlFor="handle" className="text-2xl text-slate-500">
@@ -58,20 +75,20 @@ export default function Register() {
 						className="bg-slate-100 border-none p-3 rounded-lg placeholder-slate-400"
 						{ ...register("handle", { required: "El handle es requerido" }) }
 					/>
-          {errors.handle && <ErrorMessage>{errors.handle.message}</ErrorMessage>}
+          			{errors.handle && <ErrorMessage>{errors.handle.message}</ErrorMessage>}
 				</div>
 				<div className="grid grid-cols-1 space-y-3">
 					<label htmlFor="password" className="text-2xl text-slate-500">
-						Password
+						Contraseña
 					</label>
 					<input
 						id="password"
 						type="password"
-						placeholder="Password de Registro"
+						placeholder="Contraseña de Registro"
 						className="bg-slate-100 border-none p-3 rounded-lg placeholder-slate-400"
-						{ ...register("password", { required: "El password es requerido" }) }
+						{ ...register("password", { required: "El password es requerido", minLength: { value: 6, message: "El password debe tener al menos 6 caracteres" } }) }
 					/>
-          {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
+          			{errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
 				</div>
 
 				<div className="grid grid-cols-1 space-y-3">
@@ -79,16 +96,16 @@ export default function Register() {
 						htmlFor="password_confirmation"
 						className="text-2xl text-slate-500"
 					>
-						Repetir Password
+						Repetir Contraseña
 					</label>
 					<input
-						id="password"
+						id="password_confirmation"
 						type="password"
-						placeholder="Repetir Password"
+						placeholder="Repetir Contraseña"
 						className="bg-slate-100 border-none p-3 rounded-lg placeholder-slate-400"
-						{ ...register("password_confirmation", { required: "La confirmación del password es requerida" }) }
+						{ ...register("password_confirmation", { required: "La confirmación del password es requerida", validate: (value) => value === getValues("password") || "Las contraseñas no coinciden" }) }
 					/>
-          {errors.password_confirmation && <ErrorMessage>{errors.password_confirmation.message}</ErrorMessage>}
+          			{errors.password_confirmation && <ErrorMessage>{errors.password_confirmation.message}</ErrorMessage>}
 				</div>
 
 				<input
