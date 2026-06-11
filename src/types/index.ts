@@ -8,3 +8,7 @@ export type RegisterData = Pick<User, "name" | "email" | "handle"> & {
     password: string;
     password_confirmation: string;
 }
+
+export type LoginData = Pick<User, "email"> & {
+    password: string;
+}
